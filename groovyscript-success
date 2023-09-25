@@ -1,0 +1,39 @@
+node{
+   stage('SCM Checkout'){
+     git 'https://github.com/babutamil/devops-project'
+   }
+   stage('Compile-Package'){
+
+      def mvnHome =  tool name: 'maven3', type: 'maven'   
+      sh "${mvnHome}/bin/mvn clean package"
+	  sh 'mv target/myweb*.war target/newapp.war'
+   }
+    stage('SonarQube Analysis') {
+	        def mvnHome =  tool name: 'maven3', type: 'maven'
+	        withSonarQubeEnv('sonar') { 
+	          sh "${mvnHome}/bin/mvn sonar:sonar"
+}
+    stage('Build Docker Image') {
+            sh 'cd /var/lib/jenkins/workspace/eksproject'
+            def dockerImage = docker.build("babutamil/myweb:0.0.2", "--file Dockerfile .")
+                }
+}
+    stage('Push Image to ECR') {
+                    docker.withRegistry(
+                        'https://168417631728.dkr.ecr.us-east-1.amazonaws.com/eksproject',
+                        'ecr:us-east-1:my.aws.credentials') {
+                            def myImage = docker.build('eksproject')
+                            myImage.push('latest')
+                        }
+    
+        stage('Approval - Deploy EKS'){
+                input 'Approve for EKS Deploy'
+}
+        stage('EKS Deploy') {
+                echo 'Deploying on EKS'
+                withKubeConfig(caCertificate: 'LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURCVENDQWUyZ0F3SUJBZ0lJVU4zWWhCWkNDeGt3RFFZSktvWklodmNOQVFFTEJRQXdGVEVUTUJFR0ExVUUKQXhNS2EzVmlaWEp1WlhSbGN6QWVGdzB5TXpBNU1qVXhPVEUxTWpkYUZ3MHpNekE1TWpJeE9URTFNamRhTUJVeApFekFSQmdOVkJBTVRDbXQxWW1WeWJtVjBaWE13Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLCkFvSUJBUUMwRjlaaEFLWnJlOVgxcDErNEpTd3JhQkZ1OUhqV1MwVVNyNDg0aWF4Z3U1MjVaTTlBZTJjTjg5cm8Kcm9zN3pkVDRDL1dsTUpraVBzUEdVZzg0cW9BNDNrc1pOOUt1ZzZPK2c2QmloZ1VaU3pISk1XbEtCT3hNaHhSdQp1anJWc0xWVXRtNGczeVM4akc4bWNHbEtRaVQ3M2tVdEp2MkY3UjU3SGJyVUtqWWZkZDh5bXpTM3cxZjE0OFNaCnJXZ1ZISkh3aVNyTTY0UVk2alUvM0xsMXozYTl6WFRhNGtVRDVUQnpySEdyQWxsVkViaGxGZHpjWG1zRW54bGgKQlBoSTJEbFY3L1IrT2IrckRsUHd4c1h2YkxUVnBNU2xtMnFNSWRUWGdibXVUZlZvQWs4MkxXTkNlQTQ1c1B5YQpoVEk5MWdUaGlEOTA3OSt3OUV1cHl5V0ZoNWR4QWdNQkFBR2pXVEJYTUE0R0ExVWREd0VCL3dRRUF3SUNwREFQCkJnTlZIUk1CQWY4RUJUQURBUUgvTUIwR0ExVWREZ1FXQkJSNlRzZy9paXVvc1NNbjhlR0M0TlowM3MyUldUQVYKQmdOVkhSRUVEakFNZ2dwcmRXSmxjbTVsZEdWek1BMEdDU3FHU0liM0RRRUJDd1VBQTRJQkFRQlNXdW5tdHNDdAppaW1UcDM4QmxnOWh5NHZjYXRBaS9BQ004Y3lMbXo0V29KZjZSN0hBSzEyWU5GaGx5U1M1Z3dUakQ3RkZZT29XCjY5YjQxMkE1RHZhaUh6QTUrd3JNd0RUN1JDbzVvazF4Vkt0dzZ3bmZLaW9sZFMxLzJNWG52cG5mVCtPdlRlQ28KY3dIakYwYkxkeThBVjljQlArL09zRlNlM3hwUUFCcFkrMWk2RU9jcGluemdUTmpBOTRjZGUrdFJrVGdCNVNZNQo2Y1VKMllhSHRNSU53R1ZJOG5LRE1JRThIemNCVmcvWkRkdTAwRmhQcG1MUUgxWllUYzFyaEZhYWgybklCMlVnCld1YmtFNkUvWFpnakxmTWNsOUFkVytadHFRZWd6MjhUcDBXM0RwZFpTK2V3eXJ1VXFTVWhIZ1djektzWlBBVzEKN25KcmI3clNvWkVWCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K', clusterName: 'my-eks-cluster', contextName: '',namespace: '', restrictKubeConfigAccess: false, serverUrl: 'https://13A91D6BF2B03EF51BE77539EFC434C8.gr7.us-east-1.eks.amazonaws.com') {
+                
+}
+}
+}
+}
